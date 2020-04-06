@@ -175,8 +175,7 @@ Raises an error if it can not be found."
   (insert desc)
   (newline-and-indent)
   (org-set-property "URL" original-url)
-  (insert (format-time-string "<%Y-%m-%d %H:%M:%S  %A>"))
-  (newline-and-indent)
+  (org-set-property "DATE" (format-time-string "<%Y-%m-%d %H:%M:%S  %A>"))
   (insert (concat "[[file:" link "][" desc "]]"))
   )
 
@@ -187,10 +186,11 @@ Raises an error if it can not be found."
   (unless (eq major-mode 'org-mode)
     (error "Current buffer is non-org-mode buffer"))
 
-  (setq filename (expand-file-name (read-file-name "Existing file: ")))
+  (setq filename (expand-file-name (read-file-name "Existing file: " monolith-directory)))
   (if (not (f-file? filename))
       (error (format "%s is not a regular file" filename)))
 
+  (setq original-url "")
   (let* ((desc (monolith--get-url-title filename))
          (linked-file-name "")
          )
@@ -208,6 +208,7 @@ Raises an error if it can not be found."
   (unless (eq major-mode 'org-mode)
     (error "Current buffer is non-org-mode buffer"))
 
+  (setq original-url "")
   (let* ((url-output (monolith-save-page))
          (desc (monolith--get-url-title url-output))
          (linked-file-name "")
