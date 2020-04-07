@@ -94,13 +94,15 @@ Raises an error if it can not be found."
 
 (defun monolith--output-file-name ()
   "Read the output file name."
-  (setq output (read-from-minibuffer (concat "Output file name (in " monolith-directory "): " )))
-  (if (= (length output) 0)
-      (error "Output file name is empty"))
-  (if (not (s-suffix? ".html" output))
-      (setq output (concat output ".html")))
-  (concat (s-chop-suffix "/" monolith-directory) "/" output)
-  )
+  (let* ((dir (expand-file-name (read-directory-name "Save into directory: " monolith-directory)))
+         (output (read-from-minibuffer (concat "Output file name (in " dir "): " )))
+         )
+    (if (= (length output) 0)
+        (error "Output file name is empty"))
+    (if (not (s-suffix? ".html" output))
+        (setq output (concat output ".html")))
+    (concat (s-chop-suffix "/" dir) "/" output)
+    ))
 
 (defun monolith-save-page ()
   "Save url to a file and return the filename if saved successfully."
