@@ -70,6 +70,11 @@
   :type  'string
   :group 'monolith)
 
+(defcustom monolith-tmp-directory "/tmp/monolith"
+  "Directory under which all web pages are saved temporarily before saved to `monolith-directory'."
+  :type  'string
+  :group 'monolith)
+
 (defcustom monolith-org-link-type 'relative
   "."
   :type '(choice (const :tag "Relative" relative)
@@ -104,6 +109,12 @@ Raises an error if it can not be found."
     (concat (s-chop-suffix "/" dir) "/" output)
     ))
 
+(defun monolith--tmp-output-file-name ()
+  "Read the output file name."
+  (concat (s-chop-suffix "/" monolith-tmp-directory) "/monolith.html")
+  )
+
+
 (defun monolith-save-page ()
   "Save url to a file and return the filename if saved successfully."
   (interactive)
@@ -113,21 +124,42 @@ Raises an error if it can not be found."
   (if (not (file-directory-p monolith-directory))
       (error (format "%s is not a directory" monolith-directory)))
   
-  (setq original-url "")
-  (setq default-url (monolith--get-first-url))
-  (setq url (read-from-minibuffer "Enter the url: " default-url))
-  (if (= (length url) 0)
-      (error "url is empty"))
-  (setq original-url url)
+  (if (not (file-exists-p monolith-tmp-directory))
+      (make-directory monolith-tmp-directory))
+  
+  (if (not (file-directory-p monolith-tmp-directory))
+      (error (format "%s is not a directory" monolith-tmp-directory)))
+  
+  (let* ((default-url (monolith--get-first-url))
+         (url (read-from-minibuffer "Enter the url: " default-url))
+         (original-url "")
+         (tmp-output (monolith--tmp-output-file-name))
+         output
+         output-dir
+         title
+         )
+    (if (= (length url) 0)
+        (error "url is empty"))
+    (setq original-url url)
 
-  (setq output (monolith--output-file-name))
+    (setq cmd (concat (monolith-executable) " -o " (shell-quote-argument (expand-file-name tmp-output)) " '" (url-encode-url url) "'"))
+    (shell-command cmd)
 
-  (setq cmd (concat (monolith-executable) " -o " (shell-quote-argument (expand-file-name output)) " '" (url-encode-url url) "'"))
-  (shell-command cmd)
+    (if (not (file-exists-p tmp-output))
+        (error (format "cmd %S failed" cmd))
+      )
 
-  (if (not (file-exists-p output))
-      (error (format "cmd %S failed" cmd))
-    output)
+    (setq output "")
+    (setq output-dir (expand-file-name (read-directory-name "Save into directory: " monolith-directory)))
+    (setq title (monolith--url-title tmp-output))
+    (if (not title)
+        (setq title (read-from-minibuffer (concat "Output file name (in " output-dir "): " )))
+      )  
+    (setq output (concat (s-chop-suffix "/" output-dir) "/" title ".html"))
+    (rename-file tmp-output output)
+
+    (cons title output)
+    )
   )
 
 (defun monolith--relative-file (url-filename)
@@ -211,13 +243,14 @@ Raises an error if it can not be found."
     (error "Current buffer is non-org-mode buffer"))
 
   (setq original-url "")
-  (let* ((url-output (monolith-save-page))
-         (desc (monolith--get-url-title url-output))
+  (let* ((result (monolith-save-page))
+         (desc (car result))
+         (filename (cdr result))
          (linked-file-name "")
          )
     (if (eq monolith-org-link-type 'relative)
-        (setq linked-file-name (monolith--relative-file (expand-file-name url-output)))
-      (setq linked-file-name url-output)
+        (setq linked-file-name (monolith--relative-file (expand-file-name filename)))
+      (setq linked-file-name filename)
       )
     (monolith--insert-into-org linked-file-name desc))
   
