@@ -81,7 +81,7 @@
                  (const :tag "Absolute" absolute))
   :group 'monolith)
 
-(defvar original-url "")
+(defvar monolith--original-url "")
 
 (defun monolith-executable ()
   "Return the 'monolith' executable.
@@ -132,7 +132,6 @@ Raises an error if it can not be found."
   
   (let* ((default-url (monolith--get-first-url))
          (url (read-from-minibuffer "Enter the url: " default-url))
-         (original-url "")
          (tmp-output (monolith--tmp-output-file-name))
          output
          output-dir
@@ -140,7 +139,7 @@ Raises an error if it can not be found."
          )
     (if (= (length url) 0)
         (error "url is empty"))
-    (setq original-url url)
+    (setq monolith--original-url url)
 
     (setq cmd (concat (monolith-executable) " -o " (shell-quote-argument (expand-file-name tmp-output)) " '" (url-encode-url url) "'"))
     (shell-command cmd)
@@ -208,7 +207,7 @@ Raises an error if it can not be found."
   (org-insert-heading-after-current)
   (insert desc)
   (newline-and-indent)
-  (org-set-property "URL" original-url)
+  (org-set-property "URL" monolith--original-url)
   (org-set-property "DATE" (format-time-string "<%Y-%m-%d %H:%M:%S  %A>"))
   (insert (concat "[[file:" link "][" desc "]]"))
   )
@@ -224,7 +223,7 @@ Raises an error if it can not be found."
   (if (not (f-file? filename))
       (error (format "%s is not a regular file" filename)))
 
-  (setq original-url "")
+  (setq monolith--original-url "")
   (let* ((desc (monolith--get-url-title filename))
          (linked-file-name "")
          )
@@ -242,7 +241,7 @@ Raises an error if it can not be found."
   (unless (eq major-mode 'org-mode)
     (error "Current buffer is non-org-mode buffer"))
 
-  (setq original-url "")
+  (setq monolith--original-url "")
   (let* ((result (monolith-save-page))
          (desc (car result))
          (filename (cdr result))
