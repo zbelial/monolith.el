@@ -115,7 +115,7 @@ Raises an error if it can not be found."
   )
 
 
-(defun monolith-save-page ()
+(defun monolith-save-page (&optional url)
   "Save url to a file and return the filename if saved successfully."
   (interactive)
   (if (not (file-exists-p monolith-directory))
@@ -130,7 +130,7 @@ Raises an error if it can not be found."
   (if (not (file-directory-p monolith-tmp-directory))
       (error (format "%s is not a directory" monolith-tmp-directory)))
   
-  (let* ((default-url (monolith--get-first-url))
+  (let* ((default-url (or url (monolith--get-first-url)))
          (url (read-from-minibuffer "Enter the url: " default-url))
          (tmp-output (monolith--tmp-output-file-name))
          output
@@ -153,6 +153,7 @@ Raises an error if it can not be found."
     (setq title (monolith--url-title tmp-output))
     (if (not title)
         (setq title (read-from-minibuffer (concat "Output file name (in " output-dir "): " )))
+      (setq title (read-from-minibuffer (concat "Output file name (in " output-dir "): " ) title))
       )  
     (setq output (concat (s-chop-suffix "/" output-dir) "/" title ".html"))
     (rename-file tmp-output output)
