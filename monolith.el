@@ -225,7 +225,9 @@ Raises an error if it can not be found."
       (error (format "%s is not a regular file" filename)))
 
   (setq monolith--original-url "")
-  (let* ((desc (monolith--get-url-title filename))
+  (let* (
+         ;; (desc (monolith--get-url-title filename))
+         (desc (f-filename filename))
          (linked-file-name "")
          )
     (if (eq monolith-org-link-type 'relative)
