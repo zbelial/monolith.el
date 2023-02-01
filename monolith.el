@@ -54,6 +54,7 @@
 
 (require 's)
 (require 'f)
+(require 'dom)
 
 (defgroup monolith nil
   "Save complete webpage as a single html."
