@@ -101,19 +101,16 @@ Raises an error if it can not be found."
 (defun monolith--output-file-name ()
   "Read the output file name."
   (let* ((dir (expand-file-name (read-directory-name "Save into directory: " monolith-directory)))
-         (output (read-from-minibuffer (concat "Output file name (in " dir "): " )))
-         )
+         (output (read-from-minibuffer (concat "Output file name (in " dir "): " ))))
     (if (= (length output) 0)
         (error "Output file name is empty"))
     (if (not (s-suffix? ".html" output))
         (setq output (concat output ".html")))
-    (concat (s-chop-suffix "/" dir) "/" output)
-    ))
+    (concat (s-chop-suffix "/" dir) "/" output)))
 
 (defun monolith--tmp-output-file-name ()
   "Read the output file name."
-  (concat (s-chop-suffix "/" monolith-tmp-directory) "/monolith.html")
-  )
+  (concat (s-chop-suffix "/" monolith-tmp-directory) "/monolith.html"))
 
 
 (defun monolith-save-page (&optional url)
@@ -136,8 +133,7 @@ Raises an error if it can not be found."
          (tmp-output (monolith--tmp-output-file-name))
          output
          output-dir
-         title
-         )
+         title)
     (if (= (length url) 0)
         (error "url is empty"))
     (setq monolith--original-url url)
@@ -146,34 +142,27 @@ Raises an error if it can not be found."
     (shell-command cmd)
 
     (if (not (file-exists-p tmp-output))
-        (error (format "cmd %S failed" cmd))
-      )
+        (error (format "cmd %S failed" cmd)))
 
     (setq output "")
     (setq output-dir (expand-file-name (read-directory-name "Save into directory: " monolith-directory)))
     (setq title (monolith--url-title tmp-output))
     (if (not title)
         (setq title (read-from-minibuffer (concat "Output file name (in " output-dir "): " )))
-      (setq title (read-from-minibuffer (concat "Output file name (in " output-dir "): " ) title))
-      )  
+      (setq title (read-from-minibuffer (concat "Output file name (in " output-dir "): " ) title)))  
     (setq output (concat (s-chop-suffix "/" output-dir) "/" title ".html"))
     (rename-file tmp-output output)
 
-    (cons title output)
-    )
-  )
+    (cons title output)))
 
 (defun monolith--relative-file (url-filename)
   (let* ((common-prefix (f-common-parent (list buffer-file-name url-filename)))
          (buffer-filename-suffix (s-chop-prefix common-prefix buffer-file-name))
          (url-filename-suffix (s-chop-prefix common-prefix url-filename))
          (parts-count (length (f-split buffer-filename-suffix)))
-         (result url-filename-suffix)
-         )
+         (result url-filename-suffix))
     (dotimes (__unused (- parts-count 1) result)
-      (setq result (concat "../" result)))
-    )
-  )
+      (setq result (concat "../" result)))))
 
 (defun monolith--cleanup-title (title)
   "Return TITLE with spurious whitespace removed."
@@ -199,8 +188,7 @@ Raises an error if it can not be found."
         )
     (if title
         title
-      (f-filename url-filename)))
-  )
+      (f-filename url-filename))))
 
 (defun monolith--insert-into-org (link desc)
   "Insert a new heading and a link to the current org buffer."
@@ -211,8 +199,7 @@ Raises an error if it can not be found."
   (newline-and-indent)
   (org-set-property "URL" monolith--original-url)
   (org-set-property "DATE" (format-time-string "<%Y-%m-%d %H:%M:%S  %A>"))
-  (insert (concat "[[file:" link "][" desc "]]"))
-  )
+  (insert (concat "[[file:" link "][" desc "]]")))
 
 (defun monolith-insert-existing-file-into-org ()
   "Insert a new heading and a link of an existing saved file to the current org buffer."
@@ -229,14 +216,11 @@ Raises an error if it can not be found."
   (let* (
          ;; (desc (monolith--get-url-title filename))
          (desc (f-filename filename))
-         (linked-file-name "")
-         )
+         (linked-file-name ""))
     (if (eq monolith-org-link-type 'relative)
         (setq linked-file-name (monolith--relative-file filename))
-      (setq linked-file-name filename)
-      )
-    (monolith--insert-into-org linked-file-name desc))
-  )
+      (setq linked-file-name filename))
+    (monolith--insert-into-org linked-file-name desc)))
 
 (defun monolith-save-and-insert-into-org ()
   "Save url to a file and insert into current (orgmode) buffer as a link if saved successfully."
@@ -253,11 +237,8 @@ Raises an error if it can not be found."
          )
     (if (eq monolith-org-link-type 'relative)
         (setq linked-file-name (monolith--relative-file (expand-file-name filename)))
-      (setq linked-file-name filename)
-      )
-    (monolith--insert-into-org linked-file-name desc))
-  
-  )
+      (setq linked-file-name filename))
+    (monolith--insert-into-org linked-file-name desc)))
 
 (provide 'monolith)
 ;;; monolith.el ends here
